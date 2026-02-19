@@ -28,11 +28,14 @@ interface ExtraIncomeItem {
 
 import { useAuth } from "@/contexts/AuthContext";
 
+import { useLanguage } from "@/contexts/LanguageContext";
+
 export default function ScenariosPage() {
     const { user } = useAuth();
     const budget = useBudget();
     const plan = usePaymentPlan();
     const { currency } = useCurrency();
+    const { t } = useLanguage();
 
     // Extra Income State
     const [extraIncomes, setExtraIncomes] = useState<ExtraIncomeItem[]>([]);
@@ -117,7 +120,7 @@ export default function ScenariosPage() {
             });
         } else {
             if (!user) {
-                toast.error("You must be logged in to save scenarios");
+                toast.error(t("You must be logged in to save scenarios"));
                 return;
             }
             // Create default if missing
@@ -134,7 +137,7 @@ export default function ScenariosPage() {
             });
         }
 
-        toast.success("Scenarios applied! Check Monthly Plan for updates.");
+        toast.success(t("Scenarios applied! Check Monthly Plan for updates."));
     };
 
     const currentYear = new Date().getFullYear();
@@ -142,27 +145,27 @@ export default function ScenariosPage() {
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-3xl font-bold tracking-tight">Scenarios</h2>
-                <p className="text-muted-foreground">Simulate different financial situations and strategies.</p>
+                <h2 className="text-3xl font-bold tracking-tight">{t("Scenarios")}</h2>
+                <p className="text-muted-foreground">{t("Simulate different financial situations and strategies.")}</p>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
                 <Card className="md:col-span-2 lg:col-span-1">
                     <CardHeader>
-                        <CardTitle>Extra Income Allocation</CardTitle>
+                        <CardTitle>{t("Extra Income Allocation")}</CardTitle>
                         <CardDescription>
-                            Configure bonuses/extra income and how much to use for debt.
+                            {t("Configure bonuses/extra income and how much to use for debt.")}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="space-y-4">
-                            <Label className="text-base font-semibold">1. Extra Incomes</Label>
+                            <Label className="text-base font-semibold">{t("1. Extra Incomes")}</Label>
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead className="w-[120px]">Type</TableHead>
-                                        <TableHead>Start Time</TableHead>
-                                        <TableHead>Amount ({currency})</TableHead>
+                                        <TableHead className="w-[120px]">{t("Type")}</TableHead>
+                                        <TableHead>{t("Start Time")}</TableHead>
+                                        <TableHead>{t("Amount")} ({currency})</TableHead>
                                         <TableHead className="w-[40px]"></TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -178,9 +181,9 @@ export default function ScenariosPage() {
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        <SelectItem value="one-time">One-time</SelectItem>
-                                                        <SelectItem value="monthly">Monthly</SelectItem>
-                                                        <SelectItem value="yearly">Yearly</SelectItem>
+                                                        <SelectItem value="one-time">{t("One-time")}</SelectItem>
+                                                        <SelectItem value="monthly">{t("Monthly")}</SelectItem>
+                                                        <SelectItem value="yearly">{t("Yearly")}</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </TableCell>
@@ -227,18 +230,18 @@ export default function ScenariosPage() {
                                 </TableBody>
                             </Table>
                             <Button variant="outline" size="sm" onClick={handleAddIncome}>
-                                <Plus className="mr-2 h-4 w-4" /> Add Income
+                                <Plus className="mr-2 h-4 w-4" /> {t("Add Income")}
                             </Button>
                         </div>
 
                         <hr className="my-6 border-t" />
 
                         <div className="space-y-4">
-                            <Label className="text-base font-semibold">2. Extra Income Strategy</Label>
-                            <p className="text-xs text-muted-foreground">How much of your Extra Income should go to debt?</p>
+                            <Label className="text-base font-semibold">{t("2. Extra Income Strategy")}</Label>
+                            <p className="text-xs text-muted-foreground">{t("How much of your Extra Income should go to debt?")}</p>
 
                             <div className="space-y-2">
-                                <Label>Allocation Method</Label>
+                                <Label>{t("Allocation Method")}</Label>
                                 <Select
                                     value={extraAllocType}
                                     onValueChange={(v: any) => setExtraAllocType(v)}
@@ -247,36 +250,36 @@ export default function ScenariosPage() {
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="full">Use 100% of Extra Income (Agile)</SelectItem>
-                                        <SelectItem value="percent">Percentage of Extra Income</SelectItem>
-                                        <SelectItem value="fixed">Fixed Amount per Extra Income</SelectItem>
+                                        <SelectItem value="full">{t("Use 100% of Extra Income (Agile)")}</SelectItem>
+                                        <SelectItem value="percent">{t("Percentage of Extra Income")}</SelectItem>
+                                        <SelectItem value="fixed">{t("Fixed Amount per Extra Income")}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
 
                             {extraAllocType === 'percent' && (
                                 <div className="space-y-2">
-                                    <Label>Percentage (%)</Label>
+                                    <Label>{t("Percentage (%)")}</Label>
                                     <Input
                                         type="number"
                                         min="0" max="100"
                                         value={extraAllocValue}
                                         onChange={(e) => handlePercentageChange(setExtraAllocValue, Number(e.target.value))}
                                     />
-                                    <p className="text-xs text-muted-foreground">Enter 0-100%. The rest will be kept as savings.</p>
+                                    <p className="text-xs text-muted-foreground">{t("Enter 0-100%. The rest will be kept as savings.")}</p>
                                 </div>
                             )}
 
                             {extraAllocType === 'fixed' && (
                                 <div className="space-y-2">
-                                    <Label>Fixed Amount ({currency})</Label>
+                                    <Label>{t("Fixed Amount ({currency})").replace("{currency}", currency)}</Label>
                                     <Input
                                         type="number"
                                         min="0"
                                         value={extraAllocValue}
                                         onChange={(e) => setExtraAllocValue(Number(e.target.value))}
                                     />
-                                    <p className="text-xs text-muted-foreground">Fixed amount to pay extra from the bonus.</p>
+                                    <p className="text-xs text-muted-foreground">{t("Fixed amount to pay extra from the bonus.")}</p>
                                 </div>
                             )}
                         </div>
@@ -285,14 +288,14 @@ export default function ScenariosPage() {
 
                 <Card className="md:col-span-2 lg:col-span-1">
                     <CardHeader>
-                        <CardTitle>Monthly Repayment Strategy</CardTitle>
+                        <CardTitle>{t("Monthly Repayment Strategy")}</CardTitle>
                         <CardDescription>
-                            How much of your regular "Free Cash Flow" (from Salary) should go towards debt?
+                            {t("How much of your regular \"Free Cash Flow\" (from Salary) should go towards debt?")}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="space-y-2">
-                            <Label>Allocation Method</Label>
+                            <Label>{t("Allocation Method")}</Label>
                             <Select
                                 value={allocationType}
                                 onValueChange={(v: any) => setAllocationType(v)}
@@ -301,36 +304,36 @@ export default function ScenariosPage() {
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="full">Use 100% of Free Cash (Recommended)</SelectItem>
-                                    <SelectItem value="percent">Percentage of Free Cash</SelectItem>
-                                    <SelectItem value="fixed">Fixed Monthly Amount</SelectItem>
+                                    <SelectItem value="full">{t("Use 100% of Free Cash (Recommended)")}</SelectItem>
+                                    <SelectItem value="percent">{t("Percentage of Free Cash")}</SelectItem>
+                                    <SelectItem value="fixed">{t("Fixed Monthly Amount")}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
 
                         {allocationType === 'percent' && (
                             <div className="space-y-2">
-                                <Label>Percentage (%)</Label>
+                                <Label>{t("Percentage (%)")}</Label>
                                 <Input
                                     type="number"
                                     min="0" max="100"
                                     value={allocationValue}
                                     onChange={(e) => handlePercentageChange(setAllocationValue, Number(e.target.value))}
                                 />
-                                <p className="text-xs text-muted-foreground">The rest will be saved.</p>
+                                <p className="text-xs text-muted-foreground">{t("The rest will be saved.")}</p>
                             </div>
                         )}
 
                         {allocationType === 'fixed' && (
                             <div className="space-y-2">
-                                <Label>Fixed Amount ({currency})</Label>
+                                <Label>{t("Fixed Amount ({currency})").replace("{currency}", currency)}</Label>
                                 <Input
                                     type="number"
                                     min="0"
                                     value={allocationValue}
                                     onChange={(e) => setAllocationValue(Number(e.target.value))}
                                 />
-                                <p className="text-xs text-muted-foreground">Max amount to pay extra per month.</p>
+                                <p className="text-xs text-muted-foreground">{t("Max amount to pay extra per month.")}</p>
                             </div>
                         )}
                     </CardContent>
@@ -338,7 +341,7 @@ export default function ScenariosPage() {
             </div>
 
             <div className="flex justify-end">
-                <Button onClick={handleSave} size="lg">Apply All Scenarios</Button>
+                <Button onClick={handleSave} size="lg">{t("Apply All Scenarios")}</Button>
             </div>
         </div>
     );

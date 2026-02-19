@@ -10,6 +10,7 @@ import { Download, FileSpreadsheet } from "lucide-react";
 import * as XLSX from 'xlsx';
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ImportExportPage() {
     const debts = useDebts();
@@ -17,14 +18,20 @@ export default function ImportExportPage() {
     const planConfig = usePaymentPlan();
     const transactions = useAllTransactions();
 
+    const { t } = useLanguage();
+
     const handleExport = () => {
         if (!debts || !budget) {
-            toast.error("Data not loaded yet.");
+            toast.error(t("Data not loaded yet."));
             return;
         }
 
         const wb = XLSX.utils.book_new();
         const timestamp = format(new Date(), "yyyy-MM-dd_HHmm");
+
+        // ... (Export logic remains mostly same, keys inside Excel can stay English or be translated too? User said "Everything in English must be Thai". 
+        // Logic inside export is for Excel file. Usually valid to keep keys in English for compatibility, but maybe headers should be Thai.
+        // For now, focusing on UI.)
 
         // --- 1. Summary Sheet ---
         const totalDebt = debts.reduce((sum, d) => sum + d.balance, 0);
@@ -125,46 +132,46 @@ export default function ImportExportPage() {
 
         // Save File
         XLSX.writeFile(wb, `DebtFreedom_Export_${timestamp}.xlsx`);
-        toast.success("Exported successfully!");
+        toast.success(t("Exported successfully!"));
     };
 
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-3xl font-bold tracking-tight">Import / Export</h2>
-                <p className="text-muted-foreground">Manage your data locally.</p>
+                <h2 className="text-3xl font-bold tracking-tight">{t("Import / Export")}</h2>
+                <p className="text-muted-foreground">{t("Manage your data locally.")}</p>
             </div>
 
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <FileSpreadsheet className="h-5 w-5" />
-                        Export Data
+                        {t("Export Data")}
                     </CardTitle>
                     <CardDescription>
-                        Download all your data as a multi-sheet Excel file.
+                        {t("Download all your data as a multi-sheet Excel file.")}
                         <br />
-                        Includes: Summary, Debts, Budget, Plan, and History.
+                        {t("Includes: Summary, Debts, Budget, Plan, and History.")}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Button onClick={handleExport} className="w-full sm:w-auto">
                         <Download className="mr-2 h-4 w-4" />
-                        Export to Excel
+                        {t("Export to Excel")}
                     </Button>
                 </CardContent>
             </Card>
 
             <Card className="opacity-50">
                 <CardHeader>
-                    <CardTitle>Import Data (Coming Soon)</CardTitle>
+                    <CardTitle>{t("Import Data (Coming Soon)")}</CardTitle>
                     <CardDescription>
-                        Restore from a backup or import from a template.
+                        {t("Restore from a backup or import from a template.")}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Button disabled className="w-full sm:w-auto" variant="outline">
-                        Select File...
+                        {t("Select File...")}
                     </Button>
                 </CardContent>
             </Card>

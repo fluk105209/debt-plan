@@ -17,6 +17,7 @@ interface MonthProjection {
     totalPayment: number;
     totalInterest: number;
     remainingCash: number;
+    accumulatedCash: number;
 }
 
 export function generatePlan(
@@ -31,6 +32,7 @@ export function generatePlan(
     // Safety break
     const MAX_MONTHS = 120; // 10 years cap for MVP
     let month = 0;
+    let accumulatedCash = 0;
 
     // Determine order based on strategy
     // Default is Snowball (lowest balance first)
@@ -124,6 +126,7 @@ export function generatePlan(
             totalPayment: 0,
             totalInterest: 0,
             remainingCash: 0,
+            accumulatedCash: 0,
         };
 
         // Track payment made this month for each debt
@@ -221,10 +224,10 @@ export function generatePlan(
                 if (allocType === 'full') {
                     allocatableFromRegular = netRegular;
                 } else if (allocType === 'percent') {
-                    const pct = planConfig?.allocationValue || 100;
+                    const pct = planConfig?.allocationValue ?? 100;
                     allocatableFromRegular = netRegular * (pct / 100);
                 } else if (allocType === 'fixed') {
-                    const amt = planConfig?.allocationValue || netRegular;
+                    const amt = planConfig?.allocationValue ?? netRegular;
                     allocatableFromRegular = Math.min(netRegular, amt);
                 }
             }
@@ -245,10 +248,10 @@ export function generatePlan(
                 if (extraAllocType === 'full') {
                     allocatableFromBonus = bonusAvailable;
                 } else if (extraAllocType === 'percent') {
-                    const pct = planConfig?.extraIncomeAllocationValue || 100;
+                    const pct = planConfig?.extraIncomeAllocationValue ?? 100;
                     allocatableFromBonus = bonusAvailable * (pct / 100);
                 } else if (extraAllocType === 'fixed') {
-                    const amt = planConfig?.extraIncomeAllocationValue || bonusAvailable;
+                    const amt = planConfig?.extraIncomeAllocationValue ?? bonusAvailable;
                     allocatableFromBonus = Math.min(bonusAvailable, amt);
                 }
             }
@@ -286,6 +289,9 @@ export function generatePlan(
         // Sum totals
         monthDetails.totalPayment = monthDetails.debts.reduce((s, d) => s + d.actualPayment, 0);
         monthDetails.remainingCash = remainingCashAfterMin;
+
+        accumulatedCash += remainingCashAfterMin;
+        monthDetails.accumulatedCash = accumulatedCash;
 
         projection.push(monthDetails);
         month++;

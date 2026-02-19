@@ -129,7 +129,7 @@ function SidebarContent({ pathname, setOpen }: { pathname: string; setOpen?: (op
             <div className="p-4 border-t mt-auto space-y-4">
                 <UserProfile />
                 <div className="text-xs text-muted-foreground text-center">
-                    v0.1.0 • Local First
+                    {t("v0.1.0 • Local First")}
                 </div>
             </div>
         </div>

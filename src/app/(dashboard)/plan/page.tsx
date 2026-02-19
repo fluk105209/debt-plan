@@ -20,10 +20,12 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function PlanPage() {
     const { user } = useAuth();
     const { formatMoney } = useCurrency();
+    const { t } = useLanguage();
     const debts = useDebts();
     const budget = useBudget();
     const planConfig = usePaymentPlan();
@@ -41,7 +43,7 @@ export default function PlanPage() {
     if (debts.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
-                <p className="text-lg text-muted-foreground">Please add some debt accounts to generate your plan.</p>
+                <p className="text-lg text-muted-foreground">{t("Please add some debt accounts to generate your plan.")}</p>
             </div>
         );
     }
@@ -50,7 +52,7 @@ export default function PlanPage() {
     if (!budget) {
         return (
             <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
-                <p className="text-lg text-muted-foreground">Please configure your budget to generate your plan.</p>
+                <p className="text-lg text-muted-foreground">{t("Please configure your budget to generate your plan.")}</p>
             </div>
         );
     }
@@ -84,9 +86,9 @@ export default function PlanPage() {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Monthly Payoff Plan</h2>
+                    <h2 className="text-3xl font-bold tracking-tight">{t("Monthly Payoff Plan")}</h2>
                     <p className="text-muted-foreground">
-                        projected debt freedom by <strong>{format(payoffDate, "MMMM yyyy")}</strong>
+                        {t("projected debt freedom by")} <strong>{format(payoffDate, "MMMM yyyy")}</strong>
                     </p>
                 </div>
                 <div className="w-[200px]">
@@ -95,11 +97,11 @@ export default function PlanPage() {
                         onValueChange={handleStrategyChange}
                     >
                         <SelectTrigger>
-                            <SelectValue placeholder="Strategy" />
+                            <SelectValue placeholder={t("Strategy")} />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="snowball">Snowball (Smallest Balance)</SelectItem>
-                            <SelectItem value="avalanche">Avalanche (Highest Interest)</SelectItem>
+                            <SelectItem value="snowball">{t("Snowball (Smallest Balance)")}</SelectItem>
+                            <SelectItem value="avalanche">{t("Avalanche (Highest Interest)")}</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -107,20 +109,21 @@ export default function PlanPage() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Detailed Timeline</CardTitle>
+                    <CardTitle>{t("Detailed Timeline")}</CardTitle>
                     <CardDescription>
-                        Based on your current budget and debts.
+                        {t("Based on your current budget and debts.")}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Month</TableHead>
-                                <TableHead className="text-right">Total Payment</TableHead>
-                                <TableHead className="text-right">Interest Paid</TableHead>
-                                <TableHead className="text-right">Remaining Balance</TableHead>
-                                <TableHead>Notes</TableHead>
+                                <TableHead>{t("Month")}</TableHead>
+                                <TableHead className="text-right">{t("Total Payment")}</TableHead>
+                                <TableHead className="text-right">{t("Interest Paid")}</TableHead>
+                                <TableHead className="text-right">{t("Remaining Balance")}</TableHead>
+                                <TableHead className="text-right">{t("Accumulated Cash")}</TableHead>
+                                <TableHead>{t("Notes")}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -149,24 +152,27 @@ export default function PlanPage() {
                                             <TableCell className="text-right">
                                                 {formatMoney(Math.round(totalBalance))}
                                             </TableCell>
+                                            <TableCell className="text-right text-blue-500 font-medium">
+                                                {formatMoney(month.accumulatedCash)}
+                                            </TableCell>
                                             <TableCell>
                                                 <span className="text-xs text-muted-foreground">
-                                                    {month.debts.filter(d => d.actualPayment > 0).length} payments
+                                                    {month.debts.filter(d => d.actualPayment > 0).length} {t("payments")}
                                                 </span>
                                             </TableCell>
                                         </TableRow>
                                         {isExpanded && (
                                             <TableRow className="bg-muted/30">
-                                                <TableCell colSpan={5} className="p-4">
+                                                <TableCell colSpan={6} className="p-4">
                                                     <div className="rounded-md border bg-background p-2">
-                                                        <h4 className="mb-2 text-sm font-semibold">Payment Breakdown</h4>
+                                                        <h4 className="mb-2 text-sm font-semibold">{t("Payment Breakdown")}</h4>
                                                         <Table>
                                                             <TableHeader>
                                                                 <TableRow className="h-8">
-                                                                    <TableHead className="py-1 h-8">Debt</TableHead>
-                                                                    <TableHead className="py-1 h-8 text-right">Payment</TableHead>
-                                                                    <TableHead className="py-1 h-8 text-right">Interest</TableHead>
-                                                                    <TableHead className="py-1 h-8 text-right">Remaining</TableHead>
+                                                                    <TableHead className="py-1 h-8">{t("Debt")}</TableHead>
+                                                                    <TableHead className="py-1 h-8 text-right">{t("Payment")}</TableHead>
+                                                                    <TableHead className="py-1 h-8 text-right">{t("Interest")}</TableHead>
+                                                                    <TableHead className="py-1 h-8 text-right">{t("Remaining")}</TableHead>
                                                                 </TableRow>
                                                             </TableHeader>
                                                             <TableBody>
@@ -181,7 +187,7 @@ export default function PlanPage() {
                                                             </TableBody>
                                                         </Table>
                                                         <div className="mt-2 text-xs text-muted-foreground text-right">
-                                                            Free Cash Left: {formatMoney(month.remainingCash)}
+                                                            {t("Free Cash Left")}: {formatMoney(month.remainingCash)}
                                                         </div>
                                                     </div>
                                                 </TableCell>
