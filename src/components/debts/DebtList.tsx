@@ -1,0 +1,229 @@
+"use client";
+
+import { Debt } from "@/lib/db";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { MoreHorizontal, Edit, Trash2, History } from "lucide-react";
+import { deleteDebt } from "@/hooks/use-debts";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+
+import { useState } from "react";
+import { DebtFormDialog } from "./DebtFormDialog";
+import { PaymentDialog } from "./PaymentDialog";
+import { TransactionHistory } from "./TransactionHistory";
+
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+
+interface DebtListProps {
+    debts: Debt[] | undefined;
+}
+
+export function DebtList({ debts }: DebtListProps) {
+    const { formatMoney } = useCurrency();
+    const { t } = useLanguage();
+    const [editingDebt, setEditingDebt] = useState<Debt | undefined>(undefined);
+    const [isEditOpen, setIsEditOpen] = useState(false);
+
+    const [payingDebt, setPayingDebt] = useState<Debt | undefined>(undefined);
+    const [isPayOpen, setIsPayOpen] = useState(false);
+    const [historyDebt, setHistoryDebt] = useState<Debt | undefined>(undefined);
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
+    const [debtToDelete, setDebtToDelete] = useState<number | null>(null);
+
+    const handleDelete = (id: number) => {
+        setDebtToDelete(id);
+    }
+
+    const handlePay = (debt: Debt) => {
+        setPayingDebt(debt);
+        setIsPayOpen(true);
+    }
+
+    const handleHistory = (debt: Debt) => {
+        setHistoryDebt(debt);
+        setIsHistoryOpen(true);
+    }
+
+    const confirmDelete = async () => {
+        if (debtToDelete) {
+            await deleteDebt(debtToDelete);
+            setDebtToDelete(null);
+        }
+    }
+
+    const handleEdit = (debt: Debt) => {
+        setEditingDebt(debt);
+        setIsEditOpen(true);
+    }
+
+    if (!debts || debts.length === 0) {
+        return (
+            <div className="flex justify-center items-center h-48 border rounded-lg bg-muted/20">
+                <p className="text-muted-foreground">{t("No accounts found. Add one to get started.")}</p>
+            </div>
+        );
+    }
+
+    return (
+        <>
+            <DebtFormDialog
+                debtToEdit={editingDebt}
+                open={isEditOpen}
+                onOpenChange={(open) => {
+                    setIsEditOpen(open);
+                    if (!open) setEditingDebt(undefined);
+                }}
+                showTrigger={false}
+            />
+
+            <PaymentDialog
+                debt={payingDebt}
+                open={isPayOpen}
+                onOpenChange={(open: boolean) => {
+                    setIsPayOpen(open);
+                    if (!open) setPayingDebt(undefined);
+                }}
+            />
+
+            <TransactionHistory
+                debt={historyDebt}
+                open={isHistoryOpen}
+                onOpenChange={(open) => {
+                    setIsHistoryOpen(open);
+                    if (!open) setHistoryDebt(undefined);
+                }}
+            />
+
+            <Dialog open={!!debtToDelete} onOpenChange={(open) => !open && setDebtToDelete(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{t("Are you sure?")}</DialogTitle>
+                        <DialogDescription>
+                            {t("This action cannot be undone. This will permanently delete the debt account.")}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setDebtToDelete(null)}>{t("Cancel")}</Button>
+                        <Button variant="destructive" onClick={confirmDelete}>{t("Delete")}</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <div className="rounded-md border">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>{t("Account Name")}</TableHead>
+                            <TableHead>{t("Type")}</TableHead>
+                            <TableHead className="text-right">{t("Balance")}</TableHead>
+                            <TableHead className="text-right">{t("Interest")}</TableHead>
+                            <TableHead className="text-right">{t("Min Payment")}</TableHead>
+                            <TableHead className="text-right">{t("Due Day")}</TableHead>
+                            <TableHead className="text-center">{t("Status")}</TableHead>
+                            <TableHead className="w-[50px]"></TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {debts.map((debt) => (
+                            <TableRow key={debt.id}>
+                                <TableCell className="font-medium">{debt.name}</TableCell>
+                                <TableCell className="capitalize">{debt.type.replace(/_/g, " ")}</TableCell>
+                                <TableCell className="text-right">{formatMoney(debt.balance)}</TableCell>
+                                <TableCell className="text-right">{debt.interestRate}%</TableCell>
+                                <TableCell className="text-right">
+                                    {debt.minPaymentType === 'percent'
+                                        ? (
+                                            <div className="flex flex-col items-end">
+                                                <span>{debt.minPaymentValue}%</span>
+                                                <span className="text-xs text-muted-foreground">
+                                                    ({formatMoney(Math.round((debt.balance * debt.minPaymentValue) / 100))})
+                                                </span>
+                                            </div>
+                                        )
+                                        : `${formatMoney(debt.minPaymentValue)}`}
+                                </TableCell>
+                                <TableCell className="text-right">{debt.dueDay}</TableCell>
+                                <TableCell className="text-center">
+                                    <Badge variant={debt.status === 'active' ? 'default' : 'secondary'}>
+                                        {debt.status}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell>
+                                    <div className="flex items-center justify-end gap-2">
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className="h-8 w-8 text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
+                                            title="Record Payment"
+                                            onClick={() => handlePay(debt)}
+                                        >
+                                            <span className="font-bold">{formatMoney(0).replace(/\d|,|\./g, '')}</span>
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className="h-8 w-8 text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                            title="View History"
+                                            onClick={() => handleHistory(debt)}
+                                        >
+                                            <History className="h-4 w-4" />
+                                        </Button>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                    <span className="sr-only">Open menu</span>
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuLabel>{t("Actions")}</DropdownMenuLabel>
+                                                <DropdownMenuItem onClick={() => handleEdit(debt)}>
+                                                    <Edit className="mr-2 h-4 w-4" /> {t("Edit")}
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem
+                                                    className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                                                    onSelect={() => {
+                                                        // use state based dialog instead of window.confirm
+                                                        if (debt.id) handleDelete(debt.id);
+                                                    }}
+                                                >
+                                                    <Trash2 className="mr-2 h-4 w-4" /> {t("Delete")}
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div >
+        </>
+    );
+}
