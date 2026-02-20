@@ -98,6 +98,7 @@ export default function SettingsPage() {
                 </CardContent>
             </Card>
 
+
             <div className="grid gap-6 md:grid-cols-2">
                 <Card>
                     <CardHeader>

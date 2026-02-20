@@ -1,122 +1,129 @@
-import { db } from "@/lib/db";
+import { supabase } from "@/lib/supabase";
 
 export async function clearDatabase(userId: string) {
-    if (!userId) return;
-    await db.transaction('rw', db.debts, db.budget, db.transactions, db.paymentPlan, async () => {
-        await db.debts.where('userId').equals(userId).delete();
-        await db.budget.where('userId').equals(userId).delete();
-        await db.transactions.where('userId').equals(userId).delete();
-        await db.paymentPlan.where('userId').equals(userId).delete();
-    });
+    if (!userId || !supabase) return;
+
+    // Delete in order to avoid FK constraints if any (though likely CASCADE is on)
+    await supabase.from('transactions').delete().eq('user_id', userId);
+    await supabase.from('debts').delete().eq('user_id', userId);
+    await supabase.from('budgets').delete().eq('user_id', userId);
+    await supabase.from('payment_plans').delete().eq('user_id', userId);
 }
 
 export async function seedDatabase(userId: string) {
     if (!userId) throw new Error("User ID is required for seeding data");
+    if (!supabase) throw new Error("Database not connected");
 
     await clearDatabase(userId);
 
-    await db.transaction('rw', db.debts, db.budget, db.transactions, db.paymentPlan, async () => {
-        // 2. Create Budget (Note: Step 1 is handled by clearDatabase)
-        await db.budget.add({
-            userId,
-            salary: 50000,
-            tax: 1500,
-            sso: 750,
-            pvd: 1500, // 3%
-            otherIncome: 0,
-            bonus: [], // Default empty
-            expenses: {
-                rent: 12000,
-                food: 8000,
-                transport: 3000,
-                others: 5000,
-                custom: [
-                    { name: 'Utilities', amount: 2500 }
-                ]
-            },
-            monthlySavingsTarget: 5000
-        });
+    // 1. Create Budget
+    await supabase.from('budgets').insert({
+        user_id: userId,
+        salary: 50000,
+        tax: 1500,
+        sso: 750,
+        pvd: 1500, // 3%
+        other_income: 0,
+        bonus_json: [], // Default empty
+        expenses_json: {
+            rent: 12000,
+            food: 8000,
+            transport: 3000,
+            others: 5000,
+            custom: [
+                { name: 'Utilities', amount: 2500 }
+            ]
+        },
+        monthly_savings_target: 5000
+    });
 
-        // 3. Create Debts
-        const debt1Id = await db.debts.add({
-            userId,
-            name: "Credit Card (KBank)",
-            type: "credit_card",
-            balance: 45000,
-            interestRate: 16, // 16% per year
-            minPaymentType: "percent",
-            minPaymentValue: 10, // 10%
-            dueDay: 5,
-            status: "active",
-            notes: "Used for online shopping",
-            createdAt: new Date(),
-            updatedAt: new Date()
-        });
+    // 2. Create Debts
+    const { data: debt1 } = await supabase.from('debts').insert({
+        user_id: userId,
+        name: "Credit Card (KBank)",
+        type: "credit_card",
+        balance: 45000,
+        interest_rate: 16, // 16% per year
+        min_payment_type: "percent",
+        min_payment_value: 10, // 10%
+        due_day: 5,
+        status: "active",
+        notes: "Used for online shopping",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    }).select().single();
 
-        const debt2Id = await db.debts.add({
-            userId,
-            name: "Personal Loan (SCB)",
-            type: "personal_loan",
-            balance: 150000,
-            interestRate: 22,
-            minPaymentType: "fixed",
-            minPaymentValue: 4500,
-            dueDay: 25,
-            status: "active",
-            notes: "Renovation loan",
-            createdAt: new Date(),
-            updatedAt: new Date()
-        });
+    const { data: debt2 } = await supabase.from('debts').insert({
+        user_id: userId,
+        name: "Personal Loan (SCB)",
+        type: "personal_loan",
+        balance: 150000,
+        interest_rate: 22,
+        min_payment_type: "fixed",
+        min_payment_value: 4500,
+        due_day: 25,
+        status: "active",
+        notes: "Renovation loan",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    }).select().single();
 
-        const debt3Id = await db.debts.add({
-            userId,
-            name: "Car Loan",
-            type: "car_loan",
-            balance: 350000,
-            interestRate: 3.5,
-            minPaymentType: "fixed",
-            minPaymentValue: 8500,
-            dueDay: 15,
-            status: "active",
-            notes: "Honda Civic",
-            createdAt: new Date(),
-            updatedAt: new Date()
-        });
+    const { data: debt3 } = await supabase.from('debts').insert({
+        user_id: userId,
+        name: "Car Loan",
+        type: "car_loan",
+        balance: 350000,
+        interest_rate: 3.5,
+        min_payment_type: "fixed",
+        min_payment_value: 8500,
+        due_day: 15,
+        status: "active",
+        notes: "Honda Civic",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    }).select().single();
 
-        // 4. Create History (Past 3 months)
-        const today = new Date();
-        const monthsBack = 3;
+    // 3. Create History (Past 3 months)
+    const today = new Date();
+    const monthsBack = 3;
+    const transactions = [];
 
-        for (let i = 0; i < monthsBack; i++) {
-            // Payment for Debt 1
-            await db.transactions.add({
-                userId,
-                debtId: debt1Id as number,
+    for (let i = 0; i < monthsBack; i++) {
+        if (debt1) {
+            transactions.push({
+                user_id: userId,
+                debt_id: debt1.id,
                 amount: 5000,
-                date: new Date(today.getFullYear(), today.getMonth() - i, 5),
-                type: 'payment',
-                note: `Monthly Payment - Month ${i + 1}`
-            });
-
-            // Payment for Debt 2
-            await db.transactions.add({
-                userId,
-                debtId: debt2Id as number,
-                amount: 4500,
-                date: new Date(today.getFullYear(), today.getMonth() - i, 25),
-                type: 'payment',
-                note: `Monthly Payment - Month ${i + 1}`
-            });
-
-            // Payment for Debt 3
-            await db.transactions.add({
-                userId,
-                debtId: debt3Id as number,
-                amount: 8500,
-                date: new Date(today.getFullYear(), today.getMonth() - i, 15),
+                date: new Date(today.getFullYear(), today.getMonth() - i, 5).toISOString(),
                 type: 'payment',
                 note: `Monthly Payment - Month ${i + 1}`
             });
         }
-    });
+
+        if (debt2) {
+            transactions.push({
+                user_id: userId,
+                debt_id: debt2.id,
+                amount: 4500,
+                date: new Date(today.getFullYear(), today.getMonth() - i, 25).toISOString(),
+                type: 'payment',
+                note: `Monthly Payment - Month ${i + 1}`
+            });
+        }
+
+        if (debt3) {
+            transactions.push({
+                user_id: userId,
+                debt_id: debt3.id,
+                amount: 8500,
+                date: new Date(today.getFullYear(), today.getMonth() - i, 15).toISOString(),
+                type: 'payment',
+                note: `Monthly Payment - Month ${i + 1}`
+            });
+        }
+    }
+
+    if (transactions.length > 0) {
+        await supabase.from('transactions').insert(transactions);
+    }
 }

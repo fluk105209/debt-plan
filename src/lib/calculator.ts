@@ -18,10 +18,25 @@ export function calculateMinPayment(debt: Debt): number {
     return Math.max(calculated, 0); // Ensure non-negative
 }
 
-export function calculateMonthlyInterest(debt: Debt): number {
+export function getEffectiveInterestRate(debt: Debt, date: Date = new Date()): number {
+    if (debt.promoRate !== undefined && debt.promoRate !== null && debt.promoEndDate) {
+        // Check if date is before or on promoEndDate
+        // specific comparison: compare YYYY-MM-DD or just timestamps?
+        // Let's being generous: if the month is same or before.
+        if (date.getTime() <= debt.promoEndDate.getTime()) {
+            return debt.promoRate;
+        }
+    }
+    return debt.interestRate;
+}
+
+export function calculateMonthlyInterest(debt: Debt, date: Date = new Date()): number {
     if (debt.status === 'closed') return 0;
+
+    const rate = getEffectiveInterestRate(debt, date);
+
     // Simple interest: (Rate / 12) * Balance
-    return (debt.balance * (debt.interestRate / 100)) / 12;
+    return (debt.balance * (rate / 100)) / 12;
 }
 
 export function estimatePayoffMonths(debt: Debt, monthlyPayment: number): number {

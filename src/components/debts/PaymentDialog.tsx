@@ -101,7 +101,7 @@ export function PaymentDialog({ debt, open, onOpenChange }: PaymentDialogProps) 
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="w-[95vw] max-w-lg mx-auto sm:w-full sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle>{t("Record Payment")}</DialogTitle>
                     <DialogDescription>

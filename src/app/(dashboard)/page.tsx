@@ -58,8 +58,12 @@ export default function DashboardPage() {
 
       {/* Charts Section */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <DebtChart debts={debts} />
-        <UpcomingPayments />{/* Recent Activity Replacement */}
+        <div className="md:col-span-2 lg:col-span-4 max-w-full overflow-hidden">
+          <DebtChart debts={debts} />
+        </div>
+        <div className="md:col-span-2 lg:col-span-3 max-w-full overflow-hidden">
+          <UpcomingPayments />
+        </div>
       </div>
     </div>
   );

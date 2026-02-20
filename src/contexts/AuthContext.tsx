@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { pullFromCloud } from "@/lib/sync";
+
 
 interface AuthContextType {
     user: User | null;
@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setLoading(false);
 
             if (_event === 'SIGNED_IN' && session?.user) {
-                await pullFromCloud(session.user.id);
+                // Cloud-Only: No sync needed
             }
 
             if (_event === 'SIGNED_OUT') {
@@ -74,8 +74,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             sessionStorage.clear();
             setUser(null);
             setSession(null);
-            router.push("/login");
-            router.refresh();
+            // Use window.location for hard redirect to clear all state/cache
+            window.location.href = "/login";
         }
     };
 

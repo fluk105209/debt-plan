@@ -56,6 +56,8 @@ const formSchema = z.object({
     minPaymentType: z.enum(["percent", "fixed"]),
     minPaymentValue: z.coerce.number().min(0, "Value must be positive"),
     dueDay: z.coerce.number().min(1).max(31),
+    promoRate: z.coerce.number().optional(),
+    promoEndDate: z.date().optional(),
 });
 
 interface DebtFormDialogProps {
@@ -86,6 +88,8 @@ export function DebtFormDialog({ debtToEdit, open: controlledOpen, onOpenChange:
             minPaymentType: "percent",
             minPaymentValue: 5,
             dueDay: 1,
+            promoRate: undefined,
+            promoEndDate: undefined,
         },
     });
 
@@ -100,6 +104,8 @@ export function DebtFormDialog({ debtToEdit, open: controlledOpen, onOpenChange:
                 minPaymentType: debtToEdit.minPaymentType,
                 minPaymentValue: debtToEdit.minPaymentValue,
                 dueDay: debtToEdit.dueDay,
+                promoRate: debtToEdit.promoRate,
+                promoEndDate: debtToEdit.promoEndDate ? new Date(debtToEdit.promoEndDate) : undefined,
             });
         } else if (isOpen && !debtToEdit) {
             form.reset({
@@ -110,6 +116,8 @@ export function DebtFormDialog({ debtToEdit, open: controlledOpen, onOpenChange:
                 minPaymentType: "percent",
                 minPaymentValue: 5,
                 dueDay: 1,
+                promoRate: undefined,
+                promoEndDate: undefined,
             });
         }
     }, [isOpen, debtToEdit, form]);
@@ -157,7 +165,7 @@ export function DebtFormDialog({ debtToEdit, open: controlledOpen, onOpenChange:
                 </DialogTrigger>
             )}
 
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="w-[95vw] max-w-lg mx-auto sm:w-full sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle>{isEdit ? t("Edit Debt") : t("Add New Debt")}</DialogTitle>
                     <DialogDescription>
@@ -289,6 +297,44 @@ export function DebtFormDialog({ debtToEdit, open: controlledOpen, onOpenChange:
                                     </FormItem>
                                 )}
                             />
+                        </div>
+
+                        {/* Promo Rate Section */}
+                        <div className="space-y-4 border-t pt-4">
+                            <h4 className="text-sm font-medium leading-none">{t("Promotional Rate (Optional)")}</h4>
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name="promoRate"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>{t("Promo Rate (%)")}</FormLabel>
+                                            <FormControl>
+                                                <Input type="number" step="0.01" placeholder="0" {...field} value={field.value || ''} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="promoEndDate"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>{t("Promo Ends On")}</FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    type="date"
+                                                    {...field}
+                                                    value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                                                    onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
                         </div>
                         <DialogFooter>
                             <Button type="submit">{isEdit ? t("Update") : t("Save Access")}</Button>

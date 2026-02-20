@@ -17,7 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LogOut } from "lucide-react";
@@ -68,31 +68,25 @@ const navItems = [
     { name: "Settings", href: "/settings", icon: Settings },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({ setMobileOpen, mobileOpen }: { setMobileOpen?: (open: boolean) => void, mobileOpen?: boolean }) {
     const pathname = usePathname();
-    const [open, setOpen] = useState(false);
 
     return (
-        <>
-            {/* Mobile Trigger */}
-            <div className="md:hidden fixed top-4 left-4 z-50">
-                <Sheet open={open} onOpenChange={setOpen}>
-                    <SheetTrigger asChild>
-                        <Button variant="outline" size="icon">
-                            <Menu className="h-4 w-4" />
-                        </Button>
-                    </SheetTrigger>
-                    <SheetContent side="left" className="w-64 p-0">
-                        <SidebarContent pathname={pathname} setOpen={setOpen} />
-                    </SheetContent>
-                </Sheet>
-            </div>
+        <aside className="hidden md:flex w-64 flex-col border-r bg-card/50 backdrop-blur-xl">
+            <SidebarContent pathname={pathname} />
+        </aside>
+    );
+}
 
-            {/* Desktop Sidebar */}
-            <aside className="hidden md:flex w-64 flex-col border-r bg-card/50 backdrop-blur-xl">
-                <SidebarContent pathname={pathname} />
-            </aside>
-        </>
+export function MobileSidebar({ open, setOpen }: { open: boolean, setOpen: (open: boolean) => void }) {
+    const pathname = usePathname();
+    return (
+        <Sheet open={open} onOpenChange={setOpen}>
+            <SheetContent side="left" className="w-64 p-0">
+                <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+                <SidebarContent pathname={pathname} setOpen={setOpen} />
+            </SheetContent>
+        </Sheet>
     );
 }
 

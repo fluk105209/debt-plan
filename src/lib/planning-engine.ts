@@ -139,7 +139,7 @@ export function generatePlan(
                 return;
             }
 
-            const interest = calculateMonthlyInterest(d);
+            const interest = calculateMonthlyInterest(d, currentMonthDate);
             d.balance += interest; // Add interest first
             monthDetails.totalInterest += interest;
 

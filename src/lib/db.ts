@@ -1,8 +1,6 @@
-import Dexie, { Table } from 'dexie';
-
 export interface Debt {
   id?: number;
-  cloudId?: number; // Supabase ID
+  // cloudId removed as id is now the cloud id
   userId: string;
   name: string;
   type: 'credit_card' | 'personal_loan' | 'paylater' | 'car_loan' | 'motorcycle_loan' | 'bank_loan' | 'other';
@@ -17,11 +15,14 @@ export interface Debt {
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
+
+  // Advanced Interest
+  promoRate?: number;
+  promoEndDate?: Date;
 }
 
 export interface Budget {
   id?: number;
-  cloudId?: number;
   userId: string;
   salary: number;
   tax: number;
@@ -46,7 +47,6 @@ export interface Budget {
 
 export interface PaymentPlan {
   id?: number;
-  cloudId?: number;
   userId: string;
   strategy: 'snowball' | 'avalanche'; // default snowball
   allocationType?: 'full' | 'percent' | 'fixed'; // new field
@@ -60,7 +60,6 @@ export interface PaymentPlan {
 
 export interface Transaction {
   id?: number;
-  cloudId?: number;
   userId: string;
   debtId: number;
   amount: number;
@@ -70,22 +69,5 @@ export interface Transaction {
   attachmentUrl?: string; // Path/URL to slip image
 }
 
-export class AppDatabase extends Dexie {
-  debts!: Table<Debt>;
-  budget!: Table<Budget>;
-  paymentPlan!: Table<PaymentPlan>;
-  transactions!: Table<Transaction>;
-
-  constructor() {
-    super('DebtFreedomDB');
-    // Bump version to 2 for cloudId support
-    this.version(2).stores({
-      debts: '++id, cloudId, userId, name, type, status, dueDay',
-      budget: '++id, cloudId, userId',
-      paymentPlan: '++id, cloudId, userId',
-      transactions: '++id, cloudId, userId, debtId, date, type',
-    });
-  }
-}
-
-export const db = new AppDatabase();
+// NOTE: Dexie AppDatabase class removed for Cloud-Only Architecture
+// export const db = new AppDatabase();

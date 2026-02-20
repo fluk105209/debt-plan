@@ -1,33 +1,104 @@
-import { pushPlanToCloud } from "@/lib/sync";
-import { useLiveQuery } from "dexie-react-hooks";
-import { db, PaymentPlan } from "@/lib/db";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { PaymentPlan } from "@/lib/db";
+
+const mapPlan = (p: any): PaymentPlan => ({
+    id: p.id,
+    userId: p.user_id,
+    strategy: p.strategy,
+    allocationType: p.allocation_type,
+    allocationValue: p.allocation_value,
+    extraIncomeAllocationType: p.extra_income_allocation_type,
+    extraIncomeAllocationValue: p.extra_income_allocation_value,
+    customOrder: p.custom_order,
+    bonusMonths: p.bonus_months_json,
+    minPaymentBuffer: p.min_payment_buffer,
+});
 
 export function usePaymentPlan() {
     const { user } = useAuth();
-    const plan = useLiveQuery<PaymentPlan | undefined>(
-        () => (user ? db.paymentPlan.where('userId').equals(user.id).first() : Promise.resolve(undefined)),
-        [user]
-    );
+    const [plan, setPlan] = useState<PaymentPlan | undefined>(undefined);
+
+    useEffect(() => {
+        if (!user || !supabase) return;
+
+        const fetchPlan = async () => {
+            if (!supabase) return;
+            const { data, error } = await supabase
+                .from('payment_plans')
+                .select('*')
+                .eq('user_id', user.id)
+                .maybeSingle();
+
+            if (error) console.error("Error fetching plan:", error);
+            else if (data) setPlan(mapPlan(data));
+            else setPlan(undefined);
+        };
+
+        fetchPlan();
+
+        if (!supabase) return;
+
+        const channel = supabase
+            .channel('plan_changes')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'payment_plans', filter: `user_id=eq.${user.id}` },
+                (payload) => {
+                    fetchPlan();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            if (supabase) {
+                supabase.removeChannel(channel);
+            }
+        };
+    }, [user]);
+
     return plan;
 }
 
 export async function savePaymentPlan(plan: Omit<PaymentPlan, "id">) {
-    if (!plan.userId) throw new Error("User ID is required");
+    if (!supabase) throw new Error("Database not connected");
+    if (!plan.userId) throw new Error("User ID missing");
 
-    const existing = await db.paymentPlan.where('userId').equals(plan.userId).first();
+    const payload = {
+        user_id: plan.userId,
+        strategy: plan.strategy,
+        allocation_type: plan.allocationType,
+        allocation_value: plan.allocationValue,
+        extra_income_allocation_type: plan.extraIncomeAllocationType,
+        extra_income_allocation_value: plan.extraIncomeAllocationValue,
+        custom_order: plan.customOrder,
+        bonus_months_json: plan.bonusMonths,
+        min_payment_buffer: plan.minPaymentBuffer,
+        updated_at: new Date().toISOString()
+    };
 
-    let id;
-    if (existing && existing.id) {
-        await db.paymentPlan.update(existing.id, plan);
-        id = existing.id;
+    const { data: existing } = await supabase.from('payment_plans').select('id').eq('user_id', plan.userId).maybeSingle();
+
+    let result;
+    if (existing) {
+        const { data, error } = await supabase
+            .from('payment_plans')
+            .update(payload)
+            .eq('id', existing.id)
+            .select()
+            .single();
+        if (error) throw error;
+        result = data;
     } else {
-        id = await db.paymentPlan.add(plan as PaymentPlan);
+        const { data, error } = await supabase
+            .from('payment_plans')
+            .insert(payload)
+            .select()
+            .single();
+        if (error) throw error;
+        result = data;
     }
 
-    // Cloud Sync
-    db.paymentPlan.get(id).then(p => {
-        if (p) pushPlanToCloud(p);
-    });
-    return id;
+    return result.id;
 }

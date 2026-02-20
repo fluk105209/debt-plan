@@ -17,8 +17,11 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         const saved = localStorage.getItem('app-language') as Language;
-        if (saved && (saved === 'en' || saved === 'th')) {
+        if (saved && saved === 'en') {
             setLanguageState(saved);
+        } else {
+            // Default to English even if Thai was saved, as per user request
+            setLanguageState('en');
         }
     }, []);
 
@@ -153,6 +156,15 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
             "Update payment details for": "Update payment details for",
             "Save Changes": "Save Changes",
             "Payment note": "Payment note",
+            "Accumulated Cash": "Accumulated Cash",
+            "Compare Scenarios": "Compare Scenarios",
+            "Scenario A": "Scenario A",
+            "Scenario B": "Scenario B",
+            "Debt Free Date": "Debt Free Date",
+            "Total Interest": "Total Interest",
+            "Money Saved": "Money Saved",
+            "Time Saved": "Time Saved",
+            "Simulate different financial situations and strategies.": "Simulate different financial situations and strategies."
         },
         th: {
             "Total Debt": "หนี้สินรวม",
@@ -279,6 +291,15 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
             "Update payment details for": "อัปเดตรายละเอียดการชำระเงินสำหรับ",
             "Save Changes": "บันทึกการเปลี่ยนแปลง",
             "Payment note": "บันทึกช่วยจำการชำระเงิน",
+            "Accumulated Cash": "เงินสดสะสม",
+            "Compare Scenarios": "เปรียบเทียบแผน",
+            "Scenario A": "แผน A",
+            "Scenario B": "แผน B",
+            "Debt Free Date": "วันที่หมดหนี้",
+            "Total Interest": "ดอกเบี้ยรวม",
+            "Money Saved": "ประหยัดเงินได้",
+            "Time Saved": "ประหยัดเวลาได้",
+            "Simulate different financial situations and strategies.": "จำลองสถานการณ์และกลยุทธ์ทางการเงินที่แตกต่างกัน"
         }
     };
 

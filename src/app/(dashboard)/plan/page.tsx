@@ -37,13 +37,20 @@ export default function PlanPage() {
     }, [debts, budget, planConfig]);
 
     // Loading state only if debts is undefined (initial load)
-    if (debts === undefined) return <div>Loading...</div>;
+    if (debts === undefined) {
+        return (
+            <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <p className="text-muted-foreground">{t("Loading...")}</p>
+            </div>
+        );
+    }
 
     // Empty state if no debts (even if budget exists or not)
     if (debts.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
-                <p className="text-lg text-muted-foreground">{t("Please add some debt accounts to generate your plan.")}</p>
+                <p className="text-lg text-muted-foreground">{t("Please add some debt accounts to get started.")}</p>
             </div>
         );
     }
@@ -114,8 +121,8 @@ export default function PlanPage() {
                         {t("Based on your current budget and debts.")}
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <Table>
+                <CardContent className="overflow-x-auto">
+                    <Table className="min-w-[800px]">
                         <TableHeader>
                             <TableRow>
                                 <TableHead>{t("Month")}</TableHead>
@@ -134,7 +141,7 @@ export default function PlanPage() {
                                 return (
                                     <React.Fragment key={month.monthIndex}>
                                         <TableRow
-                                            className="cursor-pointer hover:bg-muted/50"
+                                            className="cursor-pointer hover:bg-muted/50 whitespace-nowrap"
                                             onClick={() => toggleMonth(month.monthIndex)}
                                         >
                                             <TableCell className="font-medium">
@@ -164,9 +171,9 @@ export default function PlanPage() {
                                         {isExpanded && (
                                             <TableRow className="bg-muted/30">
                                                 <TableCell colSpan={6} className="p-4">
-                                                    <div className="rounded-md border bg-background p-2">
+                                                    <div className="rounded-md border bg-background p-2 overflow-x-auto">
                                                         <h4 className="mb-2 text-sm font-semibold">{t("Payment Breakdown")}</h4>
-                                                        <Table>
+                                                        <Table className="min-w-[400px]">
                                                             <TableHeader>
                                                                 <TableRow className="h-8">
                                                                     <TableHead className="py-1 h-8">{t("Debt")}</TableHead>

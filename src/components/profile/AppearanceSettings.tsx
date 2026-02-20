@@ -55,7 +55,7 @@ export function AppearanceSettings() {
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="en">{t("English (English)")}</SelectItem>
-                        <SelectItem value="th">{t("Thai (ไทย)")}</SelectItem>
+                        {/* <SelectItem value="th">{t("Thai (ไทย)")}</SelectItem> */}
                     </SelectContent>
                 </Select>
                 <p className="text-sm text-muted-foreground">

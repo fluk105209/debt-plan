@@ -16,7 +16,7 @@ export function LanguageSelector() {
                 </SelectTrigger>
                 <SelectContent>
                     <SelectItem value="en">English (English)</SelectItem>
-                    <SelectItem value="th">Thai (ไทย)</SelectItem>
+                    {/* <SelectItem value="th">Thai (ไทย)</SelectItem> */}
                 </SelectContent>
             </Select>
             <p className="text-sm text-muted-foreground">
